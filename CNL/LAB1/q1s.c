@@ -6,7 +6,7 @@
 #include<arpa/inet.h>
 #include<stdlib.h>
 
-#define PORTNO 6996
+#define PORTNO 5656
 
 void main()
 {
@@ -17,7 +17,7 @@ void main()
     sock_id = socket(AF_INET,SOCK_STREAM,0);
 
     server_addr.sin_family=AF_INET;
-    server_addr.sin_addr.s_addr=inet_addr("172.16.59.56");
+    server_addr.sin_addr.s_addr=inet_addr("172.16.59.34");
     server_addr.sin_port=htons(PORTNO);
 
     bind(sock_id,&server_addr,sizeof(server_addr));
