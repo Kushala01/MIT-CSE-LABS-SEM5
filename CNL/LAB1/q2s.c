@@ -50,7 +50,7 @@ int main(){
 	sockfd = socket(AF_LOCAL,SOCK_STREAM,0);
 
 	seraddr.sin_family = AF_LOCAL;
-	seraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	seraddr.sin_addr.s_addr = inet_addr("172.16.59.34");
 	seraddr.sin_port = htons(4003);
 
 	bind(sockfd,(struct sockaddr*)&seraddr,sizeof(seraddr));
