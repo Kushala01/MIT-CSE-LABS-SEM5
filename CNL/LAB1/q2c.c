@@ -15,7 +15,7 @@ int main(){
 	sockfd = socket(AF_LOCAL,SOCK_STREAM,0);
 
 	address.sin_family=AF_LOCAL;
-	address.sin_addr.s_addr=inet_addr("127.0.0.1");
+	address.sin_addr.s_addr=inet_addr("172.16.59.34");
 	address.sin_port=htons(4003);
 	len = sizeof(address);
 
