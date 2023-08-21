@@ -16,7 +16,7 @@ void main()
 
     address.sin_family=AF_INET;
     address.sin_port=htons(6996);
-    address.sin_addr.s_addr=inet_addr("172.16.59.56");
+    address.sin_addr.s_addr=inet_addr("172.16.59.34");
     len=sizeof(address);
 
     result=connect(sock_id,&address,len);
