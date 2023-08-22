@@ -1,3 +1,4 @@
+/*Write a program that will only list subdirectories in alphabetical order.*/
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -5,10 +6,12 @@
 #include <string.h>
 #include <dirent.h>
 
+// Function to sort an array of strings in alphabetical order
 void Sort(char** str, int n) {
     for (int i = 0; i < n - 1; i++) {
         for (int j = i + 1; j < n; j++) {
             if (strcmp(str[i], str[j]) > 0) {
+                // Swap two strings using a temporary variable
                 char temp[100];
                 strcpy(temp, str[i]);
                 strcpy(str[i], str[j]);
@@ -18,55 +21,61 @@ void Sort(char** str, int n) {
     }
 }
 
+// Function to print subdirectories in alphabetical order
 void printSubdirectories(char* dir) {
-    DIR *dp;
-    struct dirent *entry;
-    struct stat statbuf;
+    DIR *dp; // Directory stream pointer
+    struct dirent *entry; // Pointer to directory entry
+    struct stat statbuf; // Structure to store file status information
     dp = opendir(dir);
-    char** fnames = NULL;
-    int k = 0;
-    
+    char** fnames = NULL; // Array of subdirectory names
+    int k = 0; // Counter for subdirectory names
+
     if (!dp) {
         printf("Cannot open directory : %s\n", dir);
         exit(0);
     }
-    chdir(dir);
-    
+    chdir(dir); // Change the working directory to the specified directory
+
+    // Loop through directory entries
     while ((entry = readdir(dp))) {
         lstat(entry->d_name, &statbuf);
         if (S_ISDIR(statbuf.st_mode)) {
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-                continue;
+                continue; // Skip "." and ".." entries
             }
+            // Allocate memory for subdirectory name and copy it
             fnames = realloc(fnames, (k + 1) * sizeof(char*));
             fnames[k] = malloc(strlen(entry->d_name) + 1);
             strcpy(fnames[k], entry->d_name);
             k++;
-            /*If the entry is a subdirectory (S_ISDIR(statbuf.st_mode)), and it's not . or .., 
-            it dynamically allocates memory for the subdirectory name in fnames and copies the name into it.*/
         }
     }
-    closedir(dp);
-    
-    Sort(fnames, k);
-    
+    closedir(dp); // Close the directory
+
+    Sort(fnames, k); // Sort the subdirectory names
+
+    // Print sorted subdirectory names and free allocated memory
     for (int i = 0; i < k; i++) {
         printf("%s\n", fnames[i]);
         free(fnames[i]);
     }
     free(fnames);
-    
-    chdir("..");
+
+    chdir(".."); // Change the working directory back to the parent directory
 }
 
 int main() {
     char dir[256];
     printf("Enter Directory Name : \t");
     scanf("%s", dir);
+
+    // Call the printSubdirectories function to start listing subdirectories
     printSubdirectories(dir);
+
     return 0;
 }
-/*Certainly, let's break down the code snippet you provided in detail:
+
+/*
 
 ```c
 fnames = realloc(fnames, (k + 1) * sizeof(char*));
