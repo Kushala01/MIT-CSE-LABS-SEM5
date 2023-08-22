@@ -1,3 +1,5 @@
+/*Write a program to print the lines of a file that contain a word given as the program
+argument (a simple version of grep UNIX utility)*/
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
