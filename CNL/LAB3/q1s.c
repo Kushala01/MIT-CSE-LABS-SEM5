@@ -1,5 +1,5 @@
 /*Write a UDP client-server program where t he client sends rows of a matrix, and the
-server combines them together as a matrix.*/
+server combines them together as a matrix.*/ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
