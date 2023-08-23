@@ -1,3 +1,5 @@
+/*Write a program to find the inode number of an existing file in a directory. Take the
+input as a filename and print the inode number of the file.*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
