@@ -1,3 +1,5 @@
+/*Write a program to create a child process. Display the process IDs of the process,
+parent and child (if any) in both the parent and child processes.*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
