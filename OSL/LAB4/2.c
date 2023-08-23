@@ -63,5 +63,34 @@ int main(int argc, char const *argv[])
 	printf("Last Modified: %s\n", ctime(&file_stat.st_mtime));    // Print the last modification time
 	printf("Last Status: %s", ctime(&file_stat.st_ctime));    // Print the last status change time
 
+	
+	 switch (file_stat.st_mode & S_IFMT)
+    {
+    case S_IFREG:
+        printf("File Type: Regular File\n");
+        break;
+    case S_IFDIR:
+        printf("File Type: Directory\n");
+        break;
+    case S_IFLNK:
+        printf("File Type: Symbolic Link\n");
+        break;
+    case S_IFCHR:
+        printf("File Type: Character Device\n");
+        break;
+    case S_IFBLK:
+        printf("File Type: Block Device\n");
+        break;
+    case S_IFIFO:
+        printf("File Type: FIFO/Named Pipe\n");
+        break;
+    case S_IFSOCK:
+        printf("File Type: Socket\n");
+        break;
+    default:
+        printf("File Type: Unknown\n");
+        break;
+    }
+
     return 0;
 }
