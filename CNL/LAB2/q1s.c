@@ -1,3 +1,6 @@
+/*Write a TCP concurrent client server program where server accepts integer array from
+client and sorts it and returns it to the client along with process id.*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +13,7 @@
 #define MAX_CLIENTS 5
 
 void sortArray(int arr[], int size) {
+    // Function to sort an integer array using bubble sort
     int temp;
     for (int i = 0; i < size; i++) {
         for (int j = i + 1; j < size; j++) {
@@ -48,21 +52,25 @@ int main() {
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len = sizeof(client_addr);
 
+    // Create a socket
     sock_id = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_id == -1) {
         perror("Socket creation error");
         exit(1);
     }
 
+    // Set up server address details
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORTNO);
-    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(PORTNO); // Port number
+    server_addr.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP address
 
+    // Bind the socket to the server address
     if (bind(sock_id, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("Binding error");
         exit(1);
     }
 
+    // Listen for incoming connections
     if (listen(sock_id, MAX_CLIENTS) == -1) {
         perror("Listening error");
         exit(1);
@@ -70,7 +78,9 @@ int main() {
 
     printf("Server is listening...\n");
 
+    // Accept and handle client connections
     while (1) {
+        // Accept a client connection
         client_sock = accept(sock_id, (struct sockaddr *)&client_addr, &client_len);
         if (client_sock == -1) {
             perror("Accepting error");
@@ -78,12 +88,13 @@ int main() {
         }
         printf("Connection accepted from a client\n");
 
+        // Create a child process to handle the client
         if (fork() == 0) {
-            close(sock_id); //Child process doesn't need the listening socket
-            handleClient(client_sock);
-            exit(0);
+            close(sock_id); // Child process doesn't need the listening socket
+            handleClient(client_sock); // Handle the client's request
+            exit(0); // Terminate the child process
         } else {
-            close(client_sock); //Parent process doesn't need this client socket
+            close(client_sock); // Parent process doesn't need this client socket
         }
     }
 
