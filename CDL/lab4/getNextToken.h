@@ -3,8 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #define FILEINPUT "input.c"
-struct token
-{
+struct token{
     char lexeme[64];
     int row, col;
     char type[20];
@@ -14,51 +13,45 @@ char buf[024];
 const char specialsymbols[] = {'?', ';', ':', ','};
 const char *Keywords[] = {"const", "char", "int", "return", "for", "while", "do", "switch", "if", "else", "unsigned", "case", "break"};
 const char arithmeticsymbols[] = {'*','+','-','/'};
-int isKeyword(const char *str)
-{
-    for (int i = 0; i < sizeof(Keywords) / sizeof(char *); i++)
-    {
+int isKeyword(const char *str){
+    for (int i = 0; i < sizeof(Keywords) / sizeof(char *); i++){
         if (strcmp(str, Keywords[i]) == 0)
             return 1;
     }
     return 0;
 }
-int charBelongsTo(int c, const char *arr)
-{
+
+int charBelongsTo(int c, const char *arr){
     int len;
     if (arr == specialsymbols)
         len = sizeof(specialsymbols) / sizeof(char);
     else if (arr == arithmeticsymbols)
         len = sizeof(arithmeticsymbols) / sizeof(char);
-    for (int i = 0; i < len; i++)
-    {
+    for (int i = 0; i < len; i++){
         if (c == arr[i])
             return 1;
     }
     return 0;
 }
-void fillToken(struct token *tkn, char c, int row, int col, char *type)
-{
+
+void fillToken(struct token *tkn, char c, int row, int col, char *type){
     tkn->row = row;
     tkn->col = col;
     strcpy(tkn->type, type);
     tkn->lexeme[0] = c;
     tkn->lexeme[1] = '\0';
 }
-void newLine()
-{
+void newLine(){
     ++row;
     col = 1;
 }
-struct token getNextToken(FILE *fin)
-{
+
+struct token getNextToken(FILE *fin){
     int c;
     struct token tkn = {.row = -1};
     int gotToken = 0;
-    while (!gotToken && (c = fgetc(fin)) != EOF)
-    {
-        if (charBelongsTo(c, specialsymbols))
-        {
+    while (!gotToken && (c = fgetc(fin)) != EOF){
+        if (charBelongsTo(c, specialsymbols)){
             switch(c){
                 case ';':
                 
@@ -83,9 +76,7 @@ struct token getNextToken(FILE *fin)
             gotToken = 1;
             ++col;
         }
-        else if (charBelongsTo(c, arithmeticsymbols))
-
-        { 
+        else if (charBelongsTo(c, arithmeticsymbols)){ 
             switch(c){
                 case '+':
                 
@@ -110,86 +101,72 @@ struct token getNextToken(FILE *fin)
             gotToken = 1;
             ++col;
         }
-        else if (c == '(')
-        {
+        else if (c == '('){
             fillToken(&tkn, c, row, col, "(");
             gotToken = 1;
             ++col;
         }
-        else if (c == ')')
-        {
+        else if (c == ')'){
             fillToken(&tkn, c, row, col, ")");
             gotToken = 1;
             ++col;
         }
-        else if (c == '{')
-        {
+        else if (c == '{'){
             fillToken(&tkn, c, row, col, "{");
             gotToken = 1;
             ++col;
         }
-        else if (c == '}')
-        {
+        else if (c == '}'){
             fillToken(&tkn, c, row, col, "}");
             gotToken = 1;
             ++col;
         }
-        else if (c == '+')
-        {
+        else if (c == '+'){
             int d = fgetc(fin);
-            if (d != '+')
-            {
+            if (d != '+'){
                 fillToken(&tkn, c, row, col, "+");
                 gotToken = 1;
                 ++col;
                 fseek(fin, -1, SEEK_CUR);
             }
-            else
-            {
+            else{
                 fillToken(&tkn, c, row, col, "++");
                 strcpy(tkn.lexeme, "++");
                 gotToken = 1;
                 col += 2;
             }
         }
-        else if (c == '-')
-        {
+        else if (c == '-'){
             int d = fgetc(fin);
-            if (d != '-')
-            {
+            if (d != '-') {
                 fillToken(&tkn, c, row, col, "-");
                 gotToken = 1;
                 ++col;
                 fseek(fin, -1, SEEK_CUR);
             }
-            else
-            {
+            else{
                 fillToken(&tkn, c, row, col, "--");
                 strcpy(tkn.lexeme, "--");
                 gotToken = 1;
                 col += 2;
             }
         }
-        else if (c == '=')
-        {
+        else if (c == '='){
             int d = fgetc(fin);
-            if (d != '=')
-            {
+            if (d != '='){
                 fillToken(&tkn, c, row, col, "=");
                 gotToken = 1;
                 ++col;
                 fseek(fin, -1, SEEK_CUR);
             }
-            else
-            {
+            else{
                 fillToken(&tkn, c, row, col, "==");
                 strcpy(tkn.lexeme, "==");
                 gotToken = 1;
                 col += 2;
             }
         }
-        else if (isdigit(c))
-        {
+        else if (isdigit(c)){
             tkn.row = row;
             tkn.col = col++;
             tkn.lexeme[0] = c;
@@ -204,18 +181,15 @@ struct token getNextToken(FILE *fin)
             gotToken = 1;
             fseek(fin, -1, SEEK_CUR);
         }
-        else if (c == '#')
-        {
+        else if (c == '#'){
             while ((c = fgetc(fin)) != EOF && c != '\n')
                 ;
             newLine();
         }
-        else if (c == '\n')
-        {
+        else if (c == '\n'){
             newLine();
             c = fgetc(fin);
-            if (c == '#')
-            {
+            if (c == '#'){
                 while ((c = fgetc(fin)) != EOF && c != '\n')
                     ;
                 newLine();
@@ -225,14 +199,12 @@ struct token getNextToken(FILE *fin)
         }
         else if (isspace(c))
             ++col;
-        else if (isalpha(c) || c == '_')
-        {
+        else if (isalpha(c) || c == '_'){
             tkn.row = row;
             tkn.col = col++;
             tkn.lexeme[0] = c;
             int k = 1;
-            while ((c = fgetc(fin)) != EOF && isalnum(c))
-            {
+            while ((c = fgetc(fin)) != EOF && isalnum(c)){
                 tkn.lexeme[k++] = c;
                 ++col;
             }
@@ -244,25 +216,20 @@ struct token getNextToken(FILE *fin)
             gotToken = 1;
             fseek(fin, -1, SEEK_CUR);
         }
-        else if (c == '/')
-        {
+        else if (c == '/'){
             int d = fgetc(fin);
             ++col;
-            if (d == '/')
-            {
+            if (d == '/'){
                 while ((c = fgetc(fin)) != EOF && c != '\n')
                     ++col;
                 if (c == '\n')
                     newLine();
             }
-            else if (d == '*')
-            {
-                do
-                {
+            else if (d == '*'){
+                do{
                     if (d == '\n')
                         newLine();
-                    while ((c == fgetc(fin)) != EOF && c != '*')
-                    {
+                    while ((c == fgetc(fin)) != EOF && c != '*'){
                         ++col;
                         if (c == '\n')
                             newLine();
@@ -271,30 +238,26 @@ struct token getNextToken(FILE *fin)
                 } while ((d == fgetc(fin)) != EOF && d != '/' && (++col));
                 ++col;
             }
-            else
-            {
+            else{
                 fillToken(&tkn, c, row, --col, "/");
                 gotToken = 1;
                 fseek(fin, -1, SEEK_CUR);
             }
         }
-        else if (c == '"')
-        {
+        else if (c == '"'){
             tkn.row = row;
             tkn.col = col;
             strcpy(tkn.type, "StringLiteral");
             int k = 1;
             tkn.lexeme[0] = '"';
-            while ((c = fgetc(fin)) != EOF && c != '"')
-            {
+            while ((c = fgetc(fin)) != EOF && c != '"'){
                 tkn.lexeme[k++] = c;
                 ++col;
             }
             tkn.lexeme[k] = '"';
             gotToken = 1;
         }
-        else if (c == '<' || c == '>' || c == '!')
-        {
+        else if (c == '<' || c == '>' || c == '!'){
             switch(c){
                 case '>':
                 
@@ -314,24 +277,20 @@ struct token getNextToken(FILE *fin)
             // fillToken(&tkn, c, row, col, "RelationalOperator");
             ++col;
             int d = fgetc(fin);
-            if (d == '=')
-            {
+            if (d == '='){
                 ++col;
                 strcat(tkn.lexeme, "=");
             }
-            else
-            {
+            else{
                 if (c == '!')
                     strcpy(tkn.type, "!=");
                 fseek(fin, -1, SEEK_CUR);
             }
             gotToken = 1;
         }
-        else if (c == '&' || c == '|')
-        {
+        else if (c == '&' || c == '|'){
             int d = fgetc(fin);
-            if (c == d)
-            {
+            if (c == d){
                 tkn.lexeme[0] = tkn.lexeme[1] = c;
                 tkn.lexeme[2] = '\0';
                 tkn.row = row;
