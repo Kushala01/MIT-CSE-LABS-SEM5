@@ -1,27 +1,20 @@
 #include <stdio.h>
-#include <stdlib.h>
- 
-int main()
-{
-x = 10;
-y = 5;
 
-if (x == y) {
-    result = x + y;
-} else {
-    result = x - y;
+int add(int a, int b) {
+    return a + b;
 }
 
-if (x > y && y <= x) {
-    status = 1;
-} else {
-    status = 0;
-}
+int main() {
+    int num1, num2;
 
-if (y < x || x != y) {
-    flag = 1;
-} else {
-    flag = 0;
-}
+    printf("Enter the first number: ");
+    scanf("%d", &num1);
 
+    printf("Enter the second number: ");
+    scanf("%d", &num2);
+    int sum = add(num1, num2);
+
+    printf("Sum: %d\n", sum);
+
+    return 0;
 }
