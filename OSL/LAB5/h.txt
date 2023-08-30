@@ -1,1 +1,81 @@
+**IPC-1: PIPE, FIFO**
 
+- **Inter-Process Communication (IPC):** Mechanism for processes to communicate and exchange data.
+- Methods for IPC in Linux:
+  - **Pipe:** Unidirectional byte stream connecting process outputs to inputs.
+  - **Shared Memory:** Direct memory sharing between processes.
+  - **Message Queue:** Message-based communication between processes.
+
+**Pipe:**
+
+- Pipes are unidirectional byte streams.
+- Created using the `pipe` system call.
+- Consists of input (`i/p`) and output (`o/p`) file descriptors.
+- Data flows from `o/p` of one process to `i/p` of another process.
+
+- **Functions:**
+  - `read()`: Reads data from pipe.
+  - `write()`: Writes data to pipe.
+
+- **Pipe Creation:**
+  - `pipe()` function call returns file descriptors `fd[0]` and `fd[1]`.
+  - `fd[0]`: Open for reading.
+  - `fd[1]`: Open for writing.
+
+- **Pipe Usage:**
+  - Created with `pipe(int fd[2])`.
+  - First integer (element 0) is set for reading, second integer (element 1) for writing.
+
+- **Example Code:**
+  ```c
+  int fd[2];
+  pipe(fd);
+  write(fd[1], data, strlen(data));
+  read(fd[0], buf, 1024);
+  ```
+
+- **Working of Pipe:**
+  - Process creates a pipe and forks to create a copy.
+  - Parent closes read end, child closes write end.
+  - Data written by the parent can be read by the child.
+
+**Named Pipes (FIFOs):**
+
+- Named pipes allow IPC between related processes.
+- Created using `mkfifo` command or `mkfifo()` function.
+- Behave like unnamed pipes but have a name in the file system.
+- Functions:
+  - `mkfifo(const char *filename, mode_t mode)`: Create named pipe.
+  - `access(const char *path, int mode)`: Check if file exists.
+
+**Producer-Consumer Problem (PCP):**
+
+- Producer produces data consumed by a consumer.
+- Need a buffer for concurrent operation.
+- Two types of buffers:
+  - Unbounded-buffer: No limit on buffer size.
+  - Bounded-buffer: Fixed buffer size.
+
+- Synchronization Requirements for Bounded-buffer PCP:
+  - Producer waits if buffer is full.
+  - Consumer waits if buffer is empty.
+  - All producer data read by consumer.
+
+- Example: Code for Producer-Consumer problem using named pipes.
+
+**Readers-Writers Problem:**
+
+- Concurrent processes sharing resources.
+- Types: Readers (read-only), Writers (read and write).
+
+**First Readers-Writers Problem:**
+
+- Readers have high priority.
+- Reader can't be kept waiting if writer has exclusive permissions.
+
+**Second Readers-Writers Problem:**
+
+- Writers have high priority.
+- If writer is waiting/ready, new readers can't start reading.
+
+[End of Notes]
