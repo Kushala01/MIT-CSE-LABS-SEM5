@@ -3,7 +3,7 @@
 #include <string.h>
 #include "getNextToken.h"
 
-struct node{
+struct node {
     char lexeme[20];
     struct node* next;
 };
@@ -12,48 +12,45 @@ struct entry {
     char lexeme[20];
     char dtype[10];
     char rtype[10];
-    int size;
     char funcType[20]; // New field to store function type
     int numArgs;       // New field to store number of arguments
 };
+
 const char *Datatypes[] = {"int", "char", "float"};
 const char *Predef[] = {"printf"};
 struct entry symbolTable[100];
 int entryCount = 0;
 
-unsigned long hash(unsigned char *str){
+unsigned long hash(unsigned char *str) {
     unsigned long hash = 5381;
-        int c;
+    int c;
 
-        while (c = *str++)
-            hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    while (c = *str++)
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
-        return (hash%100);
+    return (hash % 100);
 }
 
 struct node* HashMap[100] = {NULL};
 
-void insert(char* str){
+void insert(char* str) {
     int hashVal = hash(str);
     struct node* temp = (struct node*) malloc(sizeof(struct node));
     strcpy(temp->lexeme, str);
 
-    if (HashMap[hashVal] == NULL){
+    if (HashMap[hashVal] == NULL) {
         HashMap[hashVal] = temp;
-    }
-
-    else{
+    } else {
         HashMap[hashVal]->next = temp;
     }
 }
 
-int search(char* str){
+int search(char* str) {
     int hashVal = hash(str);
-
     struct node* temp = HashMap[hashVal];
 
-    while(temp != NULL){
-        if (strcmp(temp->lexeme, str) == 0){
+    while(temp != NULL) {
+        if (strcmp(temp->lexeme, str) == 0) {
             return 1;
         }
         temp = temp->next;
@@ -61,64 +58,43 @@ int search(char* str){
     return 0;
 }
 
-int retSize(char* str){
-
-    if (strcmp(str, "int") == 0){
-        return 4;
-    }
-
-    else if (strcmp(str, "char") == 0){
-        return 1;
-    }
-
-    else{
-        return 0;
-    }
-}
-
-int isDtype(const char *str)
-{
-    for (int i = 0; i < sizeof(Datatypes) / sizeof(char *); i++)
-    {
+int isDtype(const char *str) {
+    for (int i = 0; i < sizeof(Datatypes) / sizeof(char *); i++) {
         if (strcmp(str, Datatypes[i]) == 0)
             return 1;
     }
     return 0;
 }
 
-int notPreDefined(char* str){
-    for (int i = 0; i < sizeof(Predef) / sizeof(char *); i++)
-    {
+int notPreDefined(char* str) {
+    for (int i = 0; i < sizeof(Predef) / sizeof(char *); i++) {
         if (strcmp(str, Predef[i]) == 0)
             return 0;
     }
     return 1;
 }
 
-int main()
-{
-    FILE *fin = fopen("input.txt", "r");
-    if (!fin)
-    {
+int main() {
+    FILE *fin = fopen("input.c", "r");
+    if (!fin) {
         printf("Error! File cannot be opened!\n");
         return 0;
     }
     struct token tkn;
     struct token nxt;
 
-    char dtypeBuf[10] = "hi"; // Renamed dbuf to dtypeBuf
+    char dtypeBuf[10] = "hi"; 
     int serialNumber = 1;
 
-    while ((tkn = getNextToken(fin)).row != -1){
+    while ((tkn = getNextToken(fin)).row != -1) {
         printf("<%s, %d, %d>\n", tkn.type, tkn.row, tkn.col);
 
-        if (strcmp(tkn.type, "Identifier") == 0 && notPreDefined(tkn.lexeme)){
-            if (search(tkn.lexeme) == 0){
+        if (strcmp(tkn.type, "Identifier") == 0 && notPreDefined(tkn.lexeme)) {
+            if (search(tkn.lexeme) == 0) {
                 struct entry tuple;
                 strcpy(tuple.dtype, dtypeBuf);
                 strcpy(tuple.rtype, "NULL");
                 strcpy(tuple.lexeme, tkn.lexeme);
-                tuple.size = retSize(dtypeBuf);
                 strcpy(tuple.funcType, "Not a Function");
                 tuple.numArgs = 0;
 
@@ -127,7 +103,6 @@ int main()
                     if ((nxt = getNextToken(fin)).row != -1 && strcmp(nxt.lexeme, "(") == 0) {
                         strcpy(tuple.dtype, "FUNC");
                         strcpy(tuple.rtype, "int"); // Assuming "main" returns int
-                        tuple.size = 0;
 
                         // Parse function arguments and update tuple.numArgs
                         int numArgs = 0;
@@ -135,7 +110,7 @@ int main()
                             if (strcmp(nxt.lexeme, ")") == 0) {
                                 break;
                             }
-                            if (strcmp(nxt.type, "Keyword") == 0 || strcmp(nxt.type, "Identifier") == 0) {
+                            if (strcmp(nxt.type, "Identifier") == 0) {
                                 numArgs++;
                             }
                         }
@@ -148,7 +123,6 @@ int main()
                 else if ((nxt = getNextToken(fin)).row != -1 && strcmp(nxt.lexeme, "(") == 0) {
                     strcpy(tuple.dtype, "FUNC");
                     strcpy(tuple.rtype, dtypeBuf);
-                    tuple.size = 0;
 
                     // Parse function arguments and update tuple.numArgs
                     int numArgs = 0;
@@ -156,8 +130,7 @@ int main()
                         if (strcmp(nxt.lexeme, ")") == 0) {
                             break;
                         }
-                        //if (strcmp(nxt.type, "Keyword") == 0 || strcmp(nxt.type, "Identifier") == 0) {
-                         if (strcmp(nxt.type, "Identifier") == 0) {
+                        if (strcmp(nxt.type, "Identifier") == 0) {
                             numArgs++;
                         }
                     }
@@ -171,21 +144,19 @@ int main()
                 insert(tuple.lexeme);
             }
         }
-
-        else if (strcmp(tkn.type, "Keyword") == 0){
-            if (isDtype(tkn.lexeme) == 0){
+        else if (strcmp(tkn.type, "Keyword") == 0) {
+            if (isDtype(tkn.lexeme) == 0) {
                 strcpy(dtypeBuf, "Void");
-            }
-            else{
+            } else {
                 strcpy(dtypeBuf, tkn.lexeme);
             }
-        }    
+        }
     }
 
     printf("\n\nSymbol Table\n\n");
-    printf("S.No.\tLexeme\t\tDtype\t\tRtype\t\tSize\t\tFunction Type\t\tNum Args\n");
+    printf("S.No.\tLexeme\t\tDtype\t\tRtype\t\tFunction Type\t\tNum Args\n");
     for (int i = 0; i < entryCount; i++) {
-        printf("%d\t%s\t\t%s\t\t%s\t\t%d \t\t%s\t\t%d\n", serialNumber++, symbolTable[i].lexeme, symbolTable[i].dtype, symbolTable[i].rtype, symbolTable[i].size, symbolTable[i].funcType, symbolTable[i].numArgs);
+        printf("%d\t%s\t\t%s\t\t%s\t\t%s\t\t%d\n", serialNumber++, symbolTable[i].lexeme, symbolTable[i].dtype, symbolTable[i].rtype, symbolTable[i].funcType, symbolTable[i].numArgs);
     }
     fclose(fin);
     return 0;
