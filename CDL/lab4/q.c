@@ -17,18 +17,16 @@ struct entry {
 };
 
 const char *Datatypes[] = {"int", "char", "float"};
-const char *Predef[] = {"printf"};
+const char *Predef[] = {"printf","scanf"};
 struct entry symbolTable[100];
 int entryCount = 0;
 
 unsigned long hash(unsigned char *str) {
     unsigned long hash = 5381;
     int c;
-
     while (c = *str++)
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-
-    return (hash % 100);
+        return (hash % 100);
 }
 
 struct node* HashMap[100] = {NULL};
@@ -83,7 +81,7 @@ int main() {
     struct token tkn;
     struct token nxt;
 
-    char dtypeBuf[10] = "hi"; 
+    char dtypeBuf[10] = "unkwn"; 
     int serialNumber = 1;
 
     while ((tkn = getNextToken(fin)).row != -1) {
@@ -146,7 +144,7 @@ int main() {
         }
         else if (strcmp(tkn.type, "Keyword") == 0) {
             if (isDtype(tkn.lexeme) == 0) {
-                strcpy(dtypeBuf, "Void");
+                strcpy(dtypeBuf, "-");
             } else {
                 strcpy(dtypeBuf, tkn.lexeme);
             }
