@@ -1,3 +1,4 @@
+//To count the number of lines and characters in a file.
 #include <stdio.h>
 
 void main() {
