@@ -252,34 +252,6 @@ struct token getNextToken(FILE *fin){
                 gotToken = 1;
                 fseek(fin, -1, SEEK_CUR);
             }
-            else if (c == '/'){
-                int d = fgetc(fin);
-                ++col;
-                if (d == '/'){
-                    while ((c = fgetc(fin)) != EOF && c != '\n')
-                        ++col;
-                    if (c == '\n')
-                        newLine();
-                }
-                else if (d == '*'){
-                    do{
-                        if (d == '\n')
-                            newLine();
-                        while ((c == fgetc(fin)) != EOF && c != '*'){
-                            ++col;
-                            if (c == '\n')
-                                newLine();
-                        }
-                        ++col;
-                    } while ((d == fgetc(fin)) != EOF && d != '/' && (++col));
-                    ++col;
-                }
-                else{
-                    fillToken(&tkn, c, row, --col, "/");
-                    gotToken = 1;
-                    fseek(fin, -1, SEEK_CUR);
-                }
-            }
             else if (c == '"'){
                 tkn.row = row;
                 tkn.col = col;
