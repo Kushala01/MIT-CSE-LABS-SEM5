@@ -95,7 +95,7 @@ int main() {
                 strcpy(tuple.dtype, dtypeBuf);
                 strcpy(tuple.rtype, "NULL");
                 strcpy(tuple.lexeme, tkn.lexeme);
-                strcpy(tuple.funcType, "Not a Function");
+                strcpy(tuple.funcType, "-");
                 tuple.numArgs = 0;
 
                 // Check if the identifier is "main"
