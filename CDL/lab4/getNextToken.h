@@ -11,7 +11,8 @@ struct token{
 static int row = 1, col = 1;
 char buf[024];
 const char specialsymbols[] = {'?', ';', ':', ','};
-const char *Keywords[] = {"const", "char", "int", "return", "for", "while", "do", "switch", "if", "else", "unsigned", "case", "break"};
+const char *Keywords[] = {"const", "char", "int", "return", "for", "while", "do", "switch", "if", "else", "unsigned", "case", "break",
+"continue","default","do","double","enum","float","long","short","signed","sizeof","static","struct","typedef","union","unsigned","void"};
 const char arithmeticsymbols[] = {'*','+','-','/'};
 int isKeyword(const char *str){
     for (int i = 0; i < sizeof(Keywords) / sizeof(char *); i++){
@@ -45,278 +46,314 @@ void newLine(){
     ++row;
     col = 1;
 }
+static int inMainFunction = 0; // Added flag to track if inside main()
 
 struct token getNextToken(FILE *fin){
     int c;
     struct token tkn = {.row = -1};
     int gotToken = 0;
+    int inComment = 0; 
     while (!gotToken && (c = fgetc(fin)) != EOF){
-        if (charBelongsTo(c, specialsymbols)){
-            switch(c){
-                case ';':
-                
-                    fillToken(&tkn, c, row, col, ";");
-                    break;
-                case ':':
-                
-                    fillToken(&tkn, c, row, col, ":");
-                    break;
-                case '?':
-                
-                    fillToken(&tkn, c, row, col, "?");
-                    break;
-                case ',':
-                
-                    fillToken(&tkn, c, row, col, ",");
-                    break;
-                default : break;
-                
+        if (inComment) {
+            if (c == '\n') {
+                newLine();
+                inComment = 0;  // End of line, end of comment
             }
-            // fillToken(&tkn, c, row, col,"SS");
-            gotToken = 1;
-            ++col;
-        }
-        else if (charBelongsTo(c, arithmeticsymbols)){ 
-            switch(c){
-                case '+':
-                
-                    fillToken(&tkn, c, row, col, "+");
-                    break;
-                case '-':
-                
-                    fillToken(&tkn, c, row, col, "-");
-                    break;
-                case '*':
-                
-                    fillToken(&tkn, c, row, col, "*");
-                    break;
-                case '/':
-                
+        } else {
+            if (c == '/') {
+                int d = fgetc(fin);
+                if (d == '/') {
+                    // Single-line comment, skip until the end of the line
+                    while ((c = fgetc(fin)) != EOF && c != '\n')
+                        ;
+                    if (c == '\n')
+                        newLine();
+                } else if (d == '*') {
+                    // Multi-line comment, skip until '*/' is found
+                    int commentDepth = 1;
+                    while (commentDepth > 0 && (c = fgetc(fin)) != EOF) {
+                        if (c == '\n')
+                            newLine();
+                        else if (c == '/' && (d = fgetc(fin)) == '*') {
+                            commentDepth++;
+                        } else if (c == '*' && (d = fgetc(fin)) == '/') {
+                            commentDepth--;
+                        }
+                    }
+                } else {
+                    // Not a comment, it's an operator '/'
                     fillToken(&tkn, c, row, col, "/");
-                    break;
-                default : break;
-                
+                    gotToken = 1;
+                    fseek(fin, -1, SEEK_CUR);
+                }
             }
-            // fillToken(&tkn, c, row, col, "ArithmeticOperator");
-            gotToken = 1;
-            ++col;
-        }
-        else if (c == '('){
-            fillToken(&tkn, c, row, col, "(");
-            gotToken = 1;
-            ++col;
-        }
-        else if (c == ')'){
-            fillToken(&tkn, c, row, col, ")");
-            gotToken = 1;
-            ++col;
-        }
-        else if (c == '{'){
-            fillToken(&tkn, c, row, col, "{");
-            gotToken = 1;
-            ++col;
-        }
-        else if (c == '}'){
-            fillToken(&tkn, c, row, col, "}");
-            gotToken = 1;
-            ++col;
-        }
-        else if (c == '+'){
-            int d = fgetc(fin);
-            if (d != '+'){
-                fillToken(&tkn, c, row, col, "+");
+            else if (charBelongsTo(c, specialsymbols)){
+                switch(c){
+                    case ';':
+                    
+                        fillToken(&tkn, c, row, col, ";");
+                        break;
+                    case ':':
+                    
+                        fillToken(&tkn, c, row, col, ":");
+                        break;
+                    case '?':
+                    
+                        fillToken(&tkn, c, row, col, "?");
+                        break;
+                    case ',':
+                    
+                        fillToken(&tkn, c, row, col, ",");
+                        break;
+                    default : break;
+                    
+                }
+                // fillToken(&tkn, c, row, col,"SS");
                 gotToken = 1;
                 ++col;
-                fseek(fin, -1, SEEK_CUR);
             }
-            else{
-                fillToken(&tkn, c, row, col, "++");
-                strcpy(tkn.lexeme, "++");
-                gotToken = 1;
-                col += 2;
-            }
-        }
-        else if (c == '-'){
-            int d = fgetc(fin);
-            if (d != '-') {
-                fillToken(&tkn, c, row, col, "-");
-                gotToken = 1;
-                ++col;
-                fseek(fin, -1, SEEK_CUR);
-            }
-            else{
-                fillToken(&tkn, c, row, col, "--");
-                strcpy(tkn.lexeme, "--");
-                gotToken = 1;
-                col += 2;
-            }
-        }
-        else if (c == '='){
-            int d = fgetc(fin);
-            if (d != '='){
-                fillToken(&tkn, c, row, col, "=");
+            else if (charBelongsTo(c, arithmeticsymbols)){ 
+                switch(c){
+                    case '+':
+                    
+                        fillToken(&tkn, c, row, col, "+");
+                        break;
+                    case '-':
+                    
+                        fillToken(&tkn, c, row, col, "-");
+                        break;
+                    case '*':
+                    
+                        fillToken(&tkn, c, row, col, "*");
+                        break;
+                    case '/':
+                    
+                        fillToken(&tkn, c, row, col, "/");
+                        break;
+                    default : break;
+                    
+                }
+                // fillToken(&tkn, c, row, col, "ArithmeticOperator");
                 gotToken = 1;
                 ++col;
+            }
+            else if (c == '('){
+                fillToken(&tkn, c, row, col, "(");
+                gotToken = 1;
+                ++col;
+            }
+            else if (c == ')'){
+                fillToken(&tkn, c, row, col, ")");
+                gotToken = 1;
+                ++col;
+            }
+            else if (c == '{'){
+                fillToken(&tkn, c, row, col, "{");
+                gotToken = 1;
+                ++col;
+            }
+            else if (c == '}'){
+                fillToken(&tkn, c, row, col, "}");
+                gotToken = 1;
+                ++col;
+            }
+            else if (c == '+'){
+                int d = fgetc(fin);
+                if (d != '+'){
+                    fillToken(&tkn, c, row, col, "+");
+                    gotToken = 1;
+                    ++col;
+                    fseek(fin, -1, SEEK_CUR);
+                }
+                else{
+                    fillToken(&tkn, c, row, col, "++");
+                    strcpy(tkn.lexeme, "++");
+                    gotToken = 1;
+                    col += 2;
+                }
+            }
+            else if (c == '-'){
+                int d = fgetc(fin);
+                if (d != '-') {
+                    fillToken(&tkn, c, row, col, "-");
+                    gotToken = 1;
+                    ++col;
+                    fseek(fin, -1, SEEK_CUR);
+                }
+                else{
+                    fillToken(&tkn, c, row, col, "--");
+                    strcpy(tkn.lexeme, "--");
+                    gotToken = 1;
+                    col += 2;
+                }
+            }
+            else if (c == '='){
+                int d = fgetc(fin);
+                if (d != '='){
+                    fillToken(&tkn, c, row, col, "=");
+                    gotToken = 1;
+                    ++col;
+                    fseek(fin, -1, SEEK_CUR);
+                }
+                else{
+                    fillToken(&tkn, c, row, col, "==");
+                    strcpy(tkn.lexeme, "==");
+                    gotToken = 1;
+                    col += 2;
+                }
+            }
+            else if (isdigit(c)){
+                tkn.row = row;
+                tkn.col = col++;
+                tkn.lexeme[0] = c;
+                int k = 1;
+                while ((c = fgetc(fin)) != EOF && isdigit(c))
+                {
+                    tkn.lexeme[k++] = c;
+                    col++;
+                }
+                tkn.lexeme[k] = '\0';
+                strcpy(tkn.type, "Number");
+                gotToken = 1;
                 fseek(fin, -1, SEEK_CUR);
             }
-            else{
-                fillToken(&tkn, c, row, col, "==");
-                strcpy(tkn.lexeme, "==");
-                gotToken = 1;
-                col += 2;
-            }
-        }
-        else if (isdigit(c)){
-            tkn.row = row;
-            tkn.col = col++;
-            tkn.lexeme[0] = c;
-            int k = 1;
-            while ((c = fgetc(fin)) != EOF && isdigit(c))
-            {
-                tkn.lexeme[k++] = c;
-                col++;
-            }
-            tkn.lexeme[k] = '\0';
-            strcpy(tkn.type, "Number");
-            gotToken = 1;
-            fseek(fin, -1, SEEK_CUR);
-        }
-        else if (c == '#'){
-            while ((c = fgetc(fin)) != EOF && c != '\n')
-                ;
-            newLine();
-        }
-        else if (c == '\n'){
-            newLine();
-            c = fgetc(fin);
-            if (c == '#'){
+            else if (c == '#'){
                 while ((c = fgetc(fin)) != EOF && c != '\n')
                     ;
                 newLine();
             }
-            else if (c != EOF)
-                fseek(fin, -1, SEEK_CUR);
-        }
-        else if (isspace(c))
-            ++col;
-        else if (isalpha(c) || c == '_'){
-            tkn.row = row;
-            tkn.col = col++;
-            tkn.lexeme[0] = c;
-            int k = 1;
-            while ((c = fgetc(fin)) != EOF && isalnum(c)){
-                tkn.lexeme[k++] = c;
-                ++col;
-            }
-            tkn.lexeme[k] = '\0';
-            if (isKeyword(tkn.lexeme))
-                strcpy(tkn.type, "Keyword");
-            else
-                strcpy(tkn.type, "Identifier");
-            gotToken = 1;
-            fseek(fin, -1, SEEK_CUR);
-        }
-        else if (c == '/'){
-            int d = fgetc(fin);
-            ++col;
-            if (d == '/'){
-                while ((c = fgetc(fin)) != EOF && c != '\n')
-                    ++col;
-                if (c == '\n')
+            else if (c == '\n'){
+                newLine();
+                c = fgetc(fin);
+                if (c == '#'){
+                    while ((c = fgetc(fin)) != EOF && c != '\n')
+                        ;
                     newLine();
+                }
+                else if (c != EOF)
+                    fseek(fin, -1, SEEK_CUR);
             }
-            else if (d == '*'){
-                do{
-                    if (d == '\n')
-                        newLine();
-                    while ((c == fgetc(fin)) != EOF && c != '*'){
-                        ++col;
-                        if (c == '\n')
-                            newLine();
-                    }
-                    ++col;
-                } while ((d == fgetc(fin)) != EOF && d != '/' && (++col));
+            else if (isspace(c))
                 ++col;
-            }
-            else{
-                fillToken(&tkn, c, row, --col, "/");
+            else if (isalpha(c) || c == '_'){
+                tkn.row = row;
+                tkn.col = col++;
+                tkn.lexeme[0] = c;
+                int k = 1;
+                while ((c = fgetc(fin)) != EOF && isalnum(c)){
+                    tkn.lexeme[k++] = c;
+                    ++col;
+                }
+                tkn.lexeme[k] = '\0';
+                if (isKeyword(tkn.lexeme))
+                    strcpy(tkn.type, "Keyword");
+                else
+                    strcpy(tkn.type, "Identifier");
                 gotToken = 1;
                 fseek(fin, -1, SEEK_CUR);
             }
-        }
-        else if (c == '"'){
-            tkn.row = row;
-            tkn.col = col;
-            strcpy(tkn.type, "StringLiteral");
-            int k = 1;
-            tkn.lexeme[0] = '"';
-            while ((c = fgetc(fin)) != EOF && c != '"'){
-                tkn.lexeme[k++] = c;
+            else if (c == '/'){
+                int d = fgetc(fin);
                 ++col;
+                if (d == '/'){
+                    while ((c = fgetc(fin)) != EOF && c != '\n')
+                        ++col;
+                    if (c == '\n')
+                        newLine();
+                }
+                else if (d == '*'){
+                    do{
+                        if (d == '\n')
+                            newLine();
+                        while ((c == fgetc(fin)) != EOF && c != '*'){
+                            ++col;
+                            if (c == '\n')
+                                newLine();
+                        }
+                        ++col;
+                    } while ((d == fgetc(fin)) != EOF && d != '/' && (++col));
+                    ++col;
+                }
+                else{
+                    fillToken(&tkn, c, row, --col, "/");
+                    gotToken = 1;
+                    fseek(fin, -1, SEEK_CUR);
+                }
             }
-            tkn.lexeme[k] = '"';
-            gotToken = 1;
-        }
-        else if (c == '<' || c == '>' || c == '!'){
-            switch(c){
-                case '>':
-                
-                    fillToken(&tkn, c, row, col, ">");
-                    break;
-                case '<':
-                
-                    fillToken(&tkn, c, row, col, "<");
-                    break;
-                case '!':
-                
-                    fillToken(&tkn, c, row, col, "!");
-                    break;
-                default : break;
-                
-            }
-            // fillToken(&tkn, c, row, col, "RelationalOperator");
-            ++col;
-            int d = fgetc(fin);
-            if (d == '='){
-                ++col;
-                strcat(tkn.lexeme, "=");
-            }
-            else{
-                if (c == '!')
-                    strcpy(tkn.type, "!=");
-                fseek(fin, -1, SEEK_CUR);
-            }
-            gotToken = 1;
-        }
-        else if (c == '&' || c == '|'){
-            int d = fgetc(fin);
-            if (c == d){
-                tkn.lexeme[0] = tkn.lexeme[1] = c;
-                tkn.lexeme[2] = '\0';
+            else if (c == '"'){
                 tkn.row = row;
                 tkn.col = col;
-                ++col;
+                strcpy(tkn.type, "StringLiteral");
+                int k = 1;
+                tkn.lexeme[0] = '"';
+                while ((c = fgetc(fin)) != EOF && c != '"'){
+                    tkn.lexeme[k++] = c;
+                    ++col;
+                }
+                tkn.lexeme[k] = '"';
                 gotToken = 1;
-                switch(c){
-                case '&':
-                
-                    fillToken(&tkn, c, row, col, "&&");
-                    break;
-                case '|':
-                
-                    fillToken(&tkn, c, row, col, "||");
-                    break;
-                default : break;
-                
             }
-                // strcpy(tkn.type, "LogicalOperator");
+            else if (c == '<' || c == '>' || c == '!'){
+                switch(c){
+                    case '>':
+                    
+                        fillToken(&tkn, c, row, col, ">");
+                        break;
+                    case '<':
+                    
+                        fillToken(&tkn, c, row, col, "<");
+                        break;
+                    case '!':
+                    
+                        fillToken(&tkn, c, row, col, "!");
+                        break;
+                    default : break;
+                    
+                }
+                // fillToken(&tkn, c, row, col, "RelationalOperator");
+                ++col;
+                int d = fgetc(fin);
+                if (d == '='){
+                    ++col;
+                    strcat(tkn.lexeme, "=");
+                }
+                else{
+                    if (c == '!')
+                        strcpy(tkn.type, "!=");
+                    fseek(fin, -1, SEEK_CUR);
+                }
+                gotToken = 1;
+            }
+            else if (c == '&' || c == '|'){
+                int d = fgetc(fin);
+                if (c == d){
+                    tkn.lexeme[0] = tkn.lexeme[1] = c;
+                    tkn.lexeme[2] = '\0';
+                    tkn.row = row;
+                    tkn.col = col;
+                    ++col;
+                    gotToken = 1;
+                    switch(c){
+                    case '&':
+                    
+                        fillToken(&tkn, c, row, col, "&&");
+                        break;
+                    case '|':
+                    
+                        fillToken(&tkn, c, row, col, "||");
+                        break;
+                    default : break;
+                    
+                }
+                    // strcpy(tkn.type, "LogicalOperator");
+                }
+                else
+                    fseek(fin, -1, SEEK_CUR);
+                ++col;
             }
             else
-                fseek(fin, -1, SEEK_CUR);
-            ++col;
+                ++col;
         }
-        else
-            ++col;
     }
     return tkn;
 }
