@@ -23,6 +23,7 @@ int isKeyword(const char *str){
 
 int charBelongsTo(int c, const char *arr){
     int len;
+    //	//if (memcmp(arr, specialsymbols, sizeof(specialsymbols)) == 0)
     if (arr == specialsymbols)
         len = sizeof(specialsymbols) / sizeof(char);
     else if (arr == arithmeticsymbols)
