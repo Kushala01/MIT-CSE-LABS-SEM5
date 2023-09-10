@@ -17,7 +17,8 @@ struct entry {
 };
 
 const char *Datatypes[] = {"int", "char", "float"};
-const char *Predef[] = {"printf","scanf"};
+const char *Operators[] = {"+", "-"};
+const char *Predef[] = {"printf", "scanf"};
 struct entry symbolTable[100];
 int entryCount = 0;
 
@@ -26,7 +27,7 @@ unsigned long hash(unsigned char *str) {
     int c;
     while (c = *str++)
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-        return (hash % 100);
+    return (hash % 100);
 }
 
 struct node* HashMap[100] = {NULL};
@@ -39,7 +40,8 @@ void insert(char* str) {
     if (HashMap[hashVal] == NULL) {
         HashMap[hashVal] = temp;
     } else {
-        HashMap[hashVal]->next = temp;
+        temp->next = HashMap[hashVal];
+        HashMap[hashVal] = temp;
     }
 }
 
@@ -59,6 +61,14 @@ int search(char* str) {
 int isDtype(const char *str) {
     for (int i = 0; i < sizeof(Datatypes) / sizeof(char *); i++) {
         if (strcmp(str, Datatypes[i]) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+int isOperator(const char *str) {
+    for (int i = 0; i < sizeof(Operators) / sizeof(char *); i++) {
+        if (strcmp(str, Operators[i]) == 0)
             return 1;
     }
     return 0;
@@ -87,7 +97,7 @@ int main() {
     while ((tkn = getNextToken(fin)).row != -1) {
         printf("<%s, %d, %d>\n", tkn.type, tkn.row, tkn.col);
 
-        if (strcmp(tkn.type, "Identifier") == 0 && notPreDefined(tkn.lexeme)) {
+        if (strcmp(tkn.type, "Identifier") == 0 && notPreDefined(tkn.lexeme) && !isOperator(tkn.lexeme)) {
             if (search(tkn.lexeme) == 0) {
                 struct entry tuple;
                 strcpy(tuple.dtype, dtypeBuf);
