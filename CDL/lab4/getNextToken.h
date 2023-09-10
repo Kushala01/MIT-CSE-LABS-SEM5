@@ -9,7 +9,6 @@ struct token{
     char type[20];
 };
 static int row = 1, col = 1;
-char buf[024];
 const char specialsymbols[] = {'?', ';', ':', ','};
 const char *Keywords[] = {"const", "char", "int", "return", "for", "while", "do", "switch", "if", "else", "unsigned", "case", "break",
 "continue","default","do","double","enum","float","long","short","signed","sizeof","static","struct","typedef","union","unsigned","void"};
