@@ -1,41 +1,48 @@
 /*Write a multithreaded program for generating prime numbers from a given starting
 number to the given ending number.*/
-#include <stdio.h>
-#include <pthread.h>
-#include <stdbool.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<pthread.h>
+#include<stdbool.h>
 
-int start, end;
+int start,end;
 
-bool is_prime(int n) {
-    if (n <= 1) return false;
-    if (n == 2) return true;
-    if (n % 2 == 0) return false;
-    for (int i = 3; i * i <= n; i += 2) {
-        if (n % i == 0) return false;
-    }
-    return true;
+int isPrime(int n){
+	if(n<=1)
+		return 0;
+	if(n==2)
+		return 1;
+	for(int i=2;i<n;i++){
+		if(n%i==0)
+			return 0;
+		else
+			return 1;
+	}
 }
 
-void* generate_primes(void* param) {
-    printf("Prime numbers between %d and %d are:\n", start, end);
-    for (int i = start; i <= end; i++) {
-        if (is_prime(i)) {
-            printf("%d\n", i);
-        }
-    }
-    return NULL;
+void * generatePrime(void * params){
+	for(int i=start;i<end;i++){
+		if(isPrime(i)){
+			printf("%d ",i);
+		}
+	}
+	pthread_exit(0);
 }
 
-int main() {
-    printf("Enter the starting number: ");
-    scanf("%d", &start);
-    printf("Enter the ending number: ");
-    scanf("%d", &end);
+int main(){
+	printf("enter start and end \n");
+	scanf("%d %d",&start,&end);
 
-    pthread_t prime_thread;
-    pthread_create(&prime_thread, NULL, generate_primes, NULL);
+	pthread_t tid;
 
-    pthread_join(prime_thread, NULL);
-
-    return 0;
+	if(pthread_create(&tid,0,generatePrime,0)!=0){
+		perror("pthread_create");
+		return 1;
+	}
+	if(pthread_join(tid,0)!=0){
+		perror("pthread_join");
+		return 1;
+	}
+	return 0;
 }
