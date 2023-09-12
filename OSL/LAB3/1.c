@@ -1,58 +1,35 @@
 /*Write a program to find the inode number of an existing file in a directory. Take the
 input as a filename and print the inode number of the file.*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/stat.h>
+#include<unistd.h>
+#include<sys/wait.h>
 
-int main()
-{
-    // creating child and parent process
-    // storing process id in `r_val`
-    printf("[*] Starting parent process\n");
-    int r_val = fork();
+int main(){
+	printf("starting parent process ");
+	int return_value=fork();
 
-    // switching between different processes
-    switch (r_val)
-    {
-
-    // in case some error occurs in creation
-    case -1:
-    {
-        perror("[*] fork\n");
-        exit(EXIT_FAILURE);
-    }
-    break;
-
-    // in case of child process
-    case 0:
-    {
-        printf("[**] Inside child process\n");
-
-        // Sleeping...
-        for (int i = 0; i < 10; i++)
-        {
-            sleep(1);
-            printf("[**] Sleeping child for %d seconds...\n", i + 1);
-        }
-
-        // exiting from the child program
-        exit(0);
-    }
-    break;
-
-    // in case of parent class
-    default:
-    {
-        printf("[*] Waiting for child\n");
-
-        // waiting for child process to finish executing
-        wait(NULL);
-        printf("[*] Child process finished execution\n");
-
-        // exiting from the parent program
-        exit(0);
-    }
-    }
+	switch(return_value){
+	case -1:{
+		perror("fork");
+		return 1;
+	}
+	case 0:{
+		printf("in child process");
+		for(int i=0;i<10;i++){
+			sleep(1);
+			printf("\nsleeping child\n");
+		}
+		exit(0);
+	}
+	break;
+	default:{
+		printf("inside parent waiting");
+		wait(0);
+		//wait(NULL);
+		printf("[*] Child process finished execution\n");
+		exit(0);
+	}
+	}
 }
