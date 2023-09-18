@@ -11,54 +11,34 @@ decrypted forms of the string. Program terminates after one session.*/
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#define PORTNO 4546
 
-#define PORTNO 5656
+void main(){
+	int len, result, sock_id, n=1;
+	struct sockaddr_in address;
+	char ch[256];
 
-void main() {
-    int sock_id, new_sockid, portno, client_len, n = 1;
-    struct sockaddr_in server_addr, client_addr;
-    
-    // Create a socket
-    sock_id = socket(AF_INET, SOCK_STREAM, 0);
+	sock_id=socket(AF_INET, SOCK_STREAM, 0);
 
-    // Set up server address details
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr("172.16.59.34"); // Server IP address
-    server_addr.sin_port = htons(PORTNO); // Port number
+	address.sin_family=AF_INET;
+	address.sin_addr.s_addr=inet_addr("127.0.0.1");
+	address.sin_port=htons(PORTNO);
+	len=sizeof(address);
 
-    // Bind the socket to the specified IP address and port number
-    bind(sock_id, (struct sockaddr*)&server_addr, sizeof(server_addr));
+	result=connect(sock_id, &address, len);
 
-    // Listen for incoming client connections
-    listen(sock_id, 5); // Allow up to 5 pending connections in the queue
+	if(result== -1){
+		perror("\n client error\n");
+		exit(1);
+	}
 
-    while (1) {
-        char buf[256] = ""; // Initialize a buffer to store incoming message
-        
-        printf("\nServer Waiting ...\n");
+	printf("enter string : ");
+	gets(ch);
 
-        client_len = sizeof(client_len);
+	ch[strlen(ch)]='\0';
 
-        // Accept a new client connection
-        new_sockid = accept(sock_id, (struct sockaddr*)&client_addr, &client_len);
-
-        // Read the encrypted message from the client
-        n = read(new_sockid, buf, sizeof(buf));
-        
-        // Display the encrypted message received from the client
-        printf("Encrypted Message from Client: %s\n", buf);
-
-        // Decrypt the received message by subtracting 4 from each character
-        for (int i = 0; i < strlen(buf); i++) {
-            buf[i] -= 4;
-        }
-
-        // Display the decrypted message
-        printf("Decrypted Message from Client: %s\n", buf);
-        
-        // Note: The server response is not sent back to the client in this code
-        
-        // Close the socket for the current client
-        close(new_sockid);
-    }
+	for(int i=0;i<strlen(ch);i++){
+		ch[i]+=4;
+	}
+	write(sock_id, ch, strlen(ch));
 }
