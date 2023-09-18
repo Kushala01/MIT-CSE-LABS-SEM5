@@ -10,41 +10,31 @@ decrypted forms of the string. Program terminates after one session.*/
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#define PORTNO 4546
 
-void main() {
-    int len, result, sock_id, n = 1;
-    struct sockaddr_in address;
-    char ch[256], buf[256];
+void main(){
+	int sock_id, portno, client_len, new_sockid, n=1;
+	struct sockaddr_in server_addr, client_addr;
 
-    // Create a socket
-    sock_id = socket(AF_INET, SOCK_STREAM, 0);
+	sock_id=socket(AF_INET, SOCK_STREAM, 0);
 
-    // Set up the server address
-    address.sin_family = AF_INET;
-    address.sin_port = htons(6996);
-    address.sin_addr.s_addr = inet_addr("172.16.59.34");
-    len = sizeof(address);
+	server_addr.sin_family=AF_INET;
+	server_addr.sin_addr.s_addr=inet_addr("127.0.0.1");
+	server_addr.sin_port=htons(PORTNO);
 
-    // Connect to the server
-    result = connect(sock_id, &address, len);
+	bind(sock_id, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	listen(sock_id,5);
 
-    if (result == -1) {
-        perror("\nClient Error !!!!\n");
-        exit(1);
-    }
+		char buf[256]="";
+		printf("\n....Server Waiting......");
+		client_len=sizeof(client_len);
+		new_sockid=accept(sock_id, (struct sockaddr*)&client_len, &client_len);
 
-    printf("\nEnter String : \t");
-    gets(ch);
-    ch[strlen(ch)] = '\0'; // Ensure string is null-terminated
-
-    // Encrypt the string by adding 4 to ASCII values of each character
-    for (int i = 0; i < strlen(ch); i++) {
-        ch[i] += 4;
-    }
-
-    // Send the encrypted string to the server
-    write(sock_id, ch, strlen(ch));
-
-    // Display the response from the server (note: missing read operation)
-    puts(buf);
+		n=read(new_sockid, buf, sizeof(buf));
+		printf("\nEncypted message from the client is: %s",buf);
+		for(int i=0;i<strlen(buf);i++){
+			buf[i]-=4;
+		}
+		printf("\n Decrypted message from client is : %s\n",buf);
+		close(new_sockid);
 }
