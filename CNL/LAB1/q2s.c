@@ -11,91 +11,76 @@ both the processes terminate.*/
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#define PORTNO 4545
 
-// Function to remove duplicate words from the string
-void removedups(char strings[][256], char ch[], char res[]) {
-    int i, j = 0, k = 0, l;
+void removedups(char strings[][256], char ch[], char res[]){
+	int i,j=0,k=0,l;
 
-    // Tokenize the input sentence into words
-    for (i = 0; ch[i] != '\0'; i++) {
-        if (ch[i] == ' ') {
-            strings[j][k] = '\0';
-            j++;
-            k = 0;
-        } else {
-            strings[j][k] = ch[i];
-            k++;
-        }
-    }
-    strings[j][k] = '\0';
-
-    // Remove duplicate words
-    k = 0;
-    for (i = 0; i < j; i++) {
-        for (l = 1; l < j + 1; l++) {
-            if (strings[i][k] == '\0' || l == i) {
-                continue;
-            }
-            if (strcmp(strings[i], strings[l]) == 0) {
-                strings[l][k] = '\0';
-            }
-        }
-    }
-
-    // Build the result string without duplicate words
-    for (i = 0; i < j + 1; i++) {
-        if (strings[i][k] == '\0') {
-            continue;
-        } else {
-            strcat(res, strings[i]);
-            strcat(res, " ");
-        }
-    }
+	for(i=0; ch[i]!='\0'; i++){
+		if (ch[i]==' '){
+			strings[j][k]='\0';
+			j++;
+			k=0;
+		}else{
+			strings[j][k]=ch[i];
+			k++;
+		}
+	}
+	strings[j][k]='\0';
+	k=0;
+	for(i = 0; i < j; i++){
+		for( l = 1; l < j+1; l++){
+			if(strings[i][k]=='\0' || i == l){
+				continue;
+			}
+			if(strcmp(strings[i],strings[l])==0){
+				strings[l][k]='\0';
+			}
+		}
+	}
+	for( i = 0; i <= j; i++){
+		if(strings[i][k]=='\0'){
+			continue;
+		}
+		strcat(res, strings[i]);
+		strcat(res, " ");
+	}
 }
 
-int main() {
-    int sockfd, newsockfd, portno, clilen, n = 1, i;
-    struct sockaddr_in seraddr, cliaddr;
+int main(){
+	int sock_id,new_sockid,portno,client_len,n=1;
+	struct sockaddr_in client_addr, server_addr;
 
-    // Create a socket
-    sockfd = socket(AF_LOCAL, SOCK_STREAM, 0);
+	sock_id = socket(AF_INET, SOCK_STREAM, 0);
 
-    seraddr.sin_family = AF_LOCAL;
-    seraddr.sin_addr.s_addr = inet_addr("172.16.59.34"); // Server IP address
-    seraddr.sin_port = htons(4003); // Port number
+	server_addr.sin_family=AF_INET;
+	server_addr.sin_addr.s_addr=inet_addr("127.0.0.1");
+	server_addr.sin_port=htons(PORTNO);
 
-    // Bind the socket
-    bind(sockfd, (struct sockaddr*)&seraddr, sizeof(seraddr));
+	bind(sock_id, (struct sockaddr*)&server_addr, sizeof(server_addr));
 
-    // Listen for incoming connections
-    listen(sockfd, 5);
+	listen(sock_id, 5);
 
-    while (1) {
-        char buf[256] = {""};
-        char strings[256][256] = {""};
-        char res[256] = {""};
-        
-        printf("Server Waiting\n");
-        clilen = sizeof(cliaddr);
+	while(1){
+		char buf[256]={""};
+		char strings[256][256]={""};
+		char res[256]={""};
 
-        // Accept a new client connection
-        newsockfd = accept(sockfd, (struct sockaddr*)&cliaddr, &clilen);
+		printf(".....Server Waiting.......\n");
+		client_len=sizeof(client_len);
 
-        // Read the sentence from the client
-        read(newsockfd, buf, sizeof(buf));
-        
-        // Check if the client wants to stop
-        if (strcmp(buf, "Stop") == 0) {
-            exit(1); // Terminate the server
-        }
+		new_sockid=accept(sock_id, (struct sockaddr*)&client_addr, &client_len);
+		read(new_sockid, buf, sizeof(buf));
 
-        // Remove duplicate words and build the result string
-        removedups(strings, buf, res);
+		printf("Message recieved from client : \n");
+		puts(buf);
+		if(strcmp(buf,"Stop")==0){
+			exit(1);
+		}
 
-        // Send the modified string back to the client
-        write(newsockfd, res, sizeof(res));
+		removedups(strings, buf, res);
 
-        // Close the client socket
-        close(newsockfd);
-    }
+		write(new_sockid, res, sizeof(res));
+		close(new_sockid);
+	}
 }
