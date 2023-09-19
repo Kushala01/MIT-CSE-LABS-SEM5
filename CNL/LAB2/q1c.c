@@ -8,59 +8,46 @@ client and sorts it and returns it to the client along with process id.*/
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h> 
 
 #define PORTNO 5656
 
-int main() {
-    int sock_id; // Socket descriptor
-    struct sockaddr_in server_addr; // Address structure for server
-    int arr_size, process_id; // Variables to store array size and process ID
-    int arr[100]; // Assuming a maximum of 100 integers in the array
+void main(){
+	int sock_id;
+	struct sockaddr_in address;
+	int arr_size, proccess_id;
+	int arr[100];
 
-    // Create a socket
-    sock_id = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_id == -1) {
-        perror("Socket creation error");
-        exit(1);
-    }
+	sock_id=socket(AF_INET, SOCK_STREAM, 0);
+	if(sock_id==-1){
+		printf("Coonection error");
+		exit(1);
+	}
+	
+	address.sin_addr.s_addr=inet_addr("127.0.0.1");
+	address.sin_family=AF_INET;
+	address.sin_port=htons(PORTNO);
+	if(connect(sock_id,(struct sockaddr*)&address, sizeof(address))==-1){
+		printf("\nconnection error");
+		exit(1);
+	}
+	printf("\n enter the array size ");
+	scanf("%d",&arr_size);
+	printf("\nenter the elements present in the array ");
+	for(int i=0;i<arr_size;i++){
+		scanf("%d",&arr[i]);
+	}
+	write(sock_id, &arr_size, sizeof(arr_size));
+	write(sock_id, arr, sizeof(arr[0])*arr_size);
 
-    // Set up server address details
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORTNO); // Port number
-    server_addr.sin_addr.s_addr = inet_addr("172.16.59.43"); // Server IP address
+	read(sock_id, &proccess_id, sizeof(proccess_id));
+	printf("\nSorted array from the server with pid %d is :\n ",proccess_id);
+	read(sock_id, arr, sizeof(arr[0])*arr_size);
+	for(int i=0;i<arr_size;i++){
+		printf(" %d ",arr[i]);
+	}
+	printf("\n");
+	close(sock_id);
 
-    // Connect to the server
-    if (connect(sock_id, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Connection error");
-        exit(1);
-    }
-
-    // Input array size and elements
-    printf("Enter the size of the array: ");
-    scanf("%d", &arr_size);
-
-    printf("Enter the array elements:\n");
-    for (int i = 0; i < arr_size; i++) {
-        scanf("%d", &arr[i]);
-    }
-
-    // Send array size and data to the server
-    send(sock_id, &arr_size, sizeof(arr_size), 0);
-    send(sock_id, arr, sizeof(arr[0]) * arr_size, 0);
-
-    // Receive sorted array and process ID from the server
-    recv(sock_id, &process_id, sizeof(process_id), 0);
-    recv(sock_id, arr, sizeof(arr[0]) * arr_size, 0);
-
-    // Display the received sorted array and process ID
-    printf("Sorted Array received from server (Process ID %d):\n", process_id);
-    for (int i = 0; i < arr_size; i++) {
-        printf("%d ", arr[i]);
-    }
-    printf("\n");
-
-    // Close the socket
-    close(sock_id);
-
-    return 0;
 }
