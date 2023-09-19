@@ -12,50 +12,39 @@ both the processes terminate.*/
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
+#define PORTNO 4545
 
-int main() {
-    while (1) { // Infinite loop to keep the client running
-        int len, result, sockfd, n = 1;
-        struct sockaddr_in address;
-        char ch[256], buf[256];
+void main(){
+	int len, result, sock_id, n=1;
+	struct sockaddr_in address;
+	char ch[256],buf[256];
 
-        // Create a socket
-        sockfd = socket(AF_LOCAL, SOCK_STREAM, 0);
+	sock_id=socket(AF_INET, SOCK_STREAM, 0);
 
-        // Set up server address details
-        address.sin_family = AF_LOCAL;
-        address.sin_addr.s_addr = inet_addr("172.16.59.34"); // Server IP address
-        address.sin_port = htons(4003); // Port number
+	address.sin_family=AF_INET;
+	address.sin_addr.s_addr=inet_addr("127.0.0.1");
+	address.sin_port=htons(PORTNO);
 
-        len = sizeof(address);
+	len=sizeof(address);
+	result=connect(sock_id, (struct sockaddr_in*)&address, len);
+	if(result == -1){
+		printf("\n client error..");
+		exit(1);
+	}
 
-        // Connect to the server
-        result = connect(sockfd, (struct sockaddr *)&address, len);
-        if (result == -1) {
-            printf("\nCLIENT ERROR");
-            exit(1);
-        }
+	printf("Enter of the String: \n");
+	gets(ch);
+	ch[strlen(ch)]='\0';
 
-        printf("\nEnter the string: ");
-        gets(ch);
-        ch[strlen(ch)] = '\0'; // Ensure the string is null-terminated
-        
-        // Check if the user wants to stop
-        if (strcmp(ch, "Stop") == 0) {
-            close(sockfd); // Close the socket
-            break; // Exit the loop
-        }
+	if(strcmp(ch,"Stop")==0){
+		close(sock_id);
+		//sbreak;
+	}
+	write(sock_id, ch, strlen(ch));
+	read(sock_id, buf, sizeof(buf));
 
-        // Send the input string to the server
-        write(sockfd, ch, strlen(ch));
+	printf("\n string after removing dups : ");
+	puts(buf);
 
-        // Read the response from the server
-        read(sockfd, buf, sizeof(buf));
-
-        printf("\nString after removing duplicates: ");
-        puts(buf); // Display the modified string received from the server
-        
-        // Close the socket
-        close(sockfd);
-    }
+	close(sock_id);
 }
