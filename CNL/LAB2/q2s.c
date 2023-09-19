@@ -12,104 +12,104 @@ terminate*/
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define PORTNO 5656
 #define MAX_CLIENTS 5
 
-// Function to perform arithmetic operation
 int performOperation(int a, int b, char op) {
-    // Perform addition, subtraction, multiplication, or division based on the operator
     int result = 0;
     switch (op) {
-        case '+':
-            result = a + b;
-            break;
-        case '-':
-            result = a - b;
-            break;
-        case '*':
-            result = a * b;
-            break;
-        case '/':
-            if (b != 0) {
-                result = a / b;
-            } else {
-                printf("Division by zero is not allowed.\n");
-            }
-            break;
-        default:
-            printf("Invalid operator.\n");
+    case '+':
+        result = a + b;
+        break;
+    case '-':
+        result = a - b;
+        break;
+    case '*':
+        result = a * b;
+        break;
+    case '/':
+        if (b != 0)
+            result = a / b;
+        else
+            printf("division by 0 is not possible\n");
+        break;
+    default:
+        printf("invalid operator %c\n", op);
     }
     return result;
 }
 
-// Function to handle client requests
 void handleClient(int client_socket) {
     int a, b, result;
     char op;
 
-    // Receive operands and operator from the client
-    recv(client_socket, &a, sizeof(a), 0);
-    recv(client_socket, &b, sizeof(b), 0);
-    recv(client_socket, &op, sizeof(op), 0);
+    if (read(client_socket, &a, sizeof(a)) < 0) {
+        perror("Error reading a");
+        close(client_socket);
+        return;
+    }
 
-    // Perform arithmetic operation
+    if (read(client_socket, &b, sizeof(b)) < 0) {
+        perror("Error reading b");
+        close(client_socket);
+        return;
+    }
+
+    if (read(client_socket, &op, sizeof(op)) < 0) {
+        perror("Error reading op");
+        close(client_socket);
+        return;
+    }
+
     result = performOperation(a, b, op);
 
-    // Send the result back to the client
-    send(client_socket, &result, sizeof(result), 0);
+    if (write(client_socket, &result, sizeof(result)) < 0) {
+        perror("Error writing result");
+    }
 
     close(client_socket);
 }
 
 int main() {
-    int sock_id, client_sock;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len = sizeof(client_addr);
+    struct sockaddr_in client_addr, server_addr;
+    int sock_id, client_socket, client_len;
 
-    // Create a socket
     sock_id = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_id == -1) {
-        perror("Socket creation error");
+    if (sock_id < 0) {
+        perror("Error creating socket");
         exit(1);
     }
 
-    // Set up server address details
-    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     server_addr.sin_port = htons(PORTNO);
-    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_family = AF_INET;
 
-    // Bind the socket to the server address
-    if (bind(sock_id, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Binding error");
+    if (bind(sock_id, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        perror("Error binding");
         exit(1);
     }
 
-    // Listen for incoming connections
-    if (listen(sock_id, MAX_CLIENTS) == -1) {
-        perror("Listening error");
+    if (listen(sock_id, MAX_CLIENTS) < 0) {
+        perror("Error listening");
         exit(1);
     }
 
-    printf("Server is listening...\n");
+    client_len = sizeof(client_len);
+    client_socket = accept(sock_id, (struct sockaddr *)&client_addr, &client_len);
+    if (client_socket < 0) {
+        perror("Error accepting connection");
+        exit(1);
+    }
 
-    // Accept and handle client connections
-    while (1) {
-        client_sock = accept(sock_id, (struct sockaddr *)&client_addr, &client_len);
-        if (client_sock == -1) {
-            perror("Accepting error");
-            exit(1);
-        }
-        printf("Connection accepted from a client\n");
-
-        // Create a child process to handle the client
-        if (fork() == 0) {
-            close(sock_id); // Child process doesn't need the listening socket
-            handleClient(client_sock); // Handle the client's request
-            exit(0); // Terminate the child process
-        } else {
-            close(client_sock); // Parent process doesn't need this client socket
-        }
+    if (fork() == 0) {
+        close(sock_id);
+        handleClient(client_socket);
+        exit(1);
+    } else {
+        close(client_socket);
     }
 
     return 0;
