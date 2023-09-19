@@ -12,95 +12,41 @@ terminate.*/
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include<arpa/inet.h>
 
 #define PORTNO 5656
 #define MAX_CLIENTS 5
 
-void sortArray(int arr[], int size) {
-    // Function to sort an integer array using bubble sort
-    int temp;
-    for (int i = 0; i < size; i++) {
-        for (int j = i + 1; j < size; j++) {
-            if (arr[i] > arr[j]) {
-                temp = arr[i];
-                arr[i] = arr[j];
-                arr[j] = temp;
-            }
-        }
-    }
-}
+void main(){
+	int sock_id,a ,b,result,addr_len;
+	char op;
+	struct sockaddr_in address;
 
-void handleClient(int client_socket) {
-    int arr_size, process_id;
-    int arr[100]; // Assuming a maximum of 100 integers in the array
+	sock_id=socket(AF_INET, SOCK_STREAM, 0);
 
-    // Receive array size and array data from the client
-    recv(client_socket, &arr_size, sizeof(arr_size), 0);
-    recv(client_socket, arr, sizeof(arr[0]) * arr_size, 0);
+	address.sin_addr.s_addr=inet_addr("127.0.0.1");
+	address.sin_port=htons(PORTNO);
+	address.sin_family=AF_INET;
 
-    // Get the process ID
-    process_id = getpid();
-
-    // Sort the array
-    sortArray(arr, arr_size);
-
-    // Send the sorted array and process ID back to the client
-    send(client_socket, &process_id, sizeof(process_id), 0);
-    send(client_socket, arr, sizeof(arr[0]) * arr_size, 0);
-
-    close(client_socket);
-}
-
-int main() {
-    int sock_id, client_sock;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len = sizeof(client_addr);
-
-    // Create a socket
-    sock_id = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_id == -1) {
-        perror("Socket creation error");
+	//	addr_len=sizeof(addr_len);
+	if (connect(sock_id, (struct sockaddr *)&address, sizeof(address)) == -1) {
+        perror("Connection error");
         exit(1);
     }
 
-    // Set up server address details
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORTNO); // Port number
-    server_addr.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP address
+	printf("enter a and b: \n");
+	scanf("%d %d",&a,&b);
+	printf("\nEnter operator (+, -, *, /): ");
+	scanf(" %c", &op);  // Notice the space before %c to consume any previous newline character.
 
-    // Bind the socket to the server address
-    if (bind(sock_id, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Binding error");
-        exit(1);
-    }
 
-    // Listen for incoming connections
-    if (listen(sock_id, MAX_CLIENTS) == -1) {
-        perror("Listening error");
-        exit(1);
-    }
+	write(sock_id, &a, sizeof(a));
+	write(sock_id, &b, sizeof(b));
+	write(sock_id, &op, sizeof(char));
 
-    printf("Server is listening...\n");
+	read(sock_id, &result, sizeof(result));
+	printf("\n result is : %d\n",result);
 
-    // Accept and handle client connections
-    while (1) {
-        // Accept a client connection
-        client_sock = accept(sock_id, (struct sockaddr *)&client_addr, &client_len);
-        if (client_sock == -1) {
-            perror("Accepting error");
-            exit(1);
-        }
-        printf("Connection accepted from a client\n");
-
-        // Create a child process to handle the client
-        if (fork() == 0) {
-            close(sock_id); // Child process doesn't need the listening socket
-            handleClient(client_sock); // Handle the client's request
-            exit(0); // Terminate the child process
-        } else {
-            close(client_sock); // Parent process doesn't need this client socket
-        }
-    }
-
-    return 0;
+	close(sock_id);
 }
