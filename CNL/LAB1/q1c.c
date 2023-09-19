@@ -28,7 +28,7 @@ void main(){
 		char buf[256]="";
 		printf("\n....Server Waiting......");
 		client_len=sizeof(client_len);
-		new_sockid=accept(sock_id, (struct sockaddr*)&client_len, &client_len);
+		new_sockid=accept(sock_id, (struct sockaddr*)&client_addr, &client_len);
 
 		n=read(new_sockid, buf, sizeof(buf));
 		printf("\nEncypted message from the client is: %s",buf);
