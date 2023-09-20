@@ -7,47 +7,29 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
+#include<time.h>
 
-#define PORTNO 10400
+#define PORTNO 5656
+#define MAX_CLIENTS 5
 
-int main() {
-    int sockfd, n;
-    struct sockaddr_in servaddr;
-    char buf[256];
+void main(){
+	int sockid, pid;
+	struct sockaddr_in address;
+	char tt[256];
 
-    // Create a socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        perror("Socket creation error");
-        exit(1);
-    }
+	sockid=socket(AF_INET, SOCK_STREAM, 0);
 
-    // Set up server address details
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("172.16.59.43"); // Server IP address
-    servaddr.sin_port = htons(PORTNO); // Port number
+	address.sin_family=AF_INET;
+	address.sin_port=htons(PORTNO);
+	address.sin_addr.s_addr=inet_addr("127.0.0.1");
 
-    // Connect to the server
-    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-        perror("Connection error");
-        exit(1);
-    }
+	connect(sockid, (struct sockaddr *)&address, sizeof(address));
 
-    // Read data from the server
-    n = read(sockfd, buf, sizeof(buf) - 1);
-    if (n < 0) {
-        perror("Read error");
-        exit(1);
-    }
-    buf[n] = '\0';
+	read(sockid, &pid, sizeof(pid));
+	read(sockid, tt, sizeof(tt));
 
-    // Print the received message from the server
-    printf("Received from server:\n%s\n", buf);
-
-    // Close the socket
-    close(sockfd);
-
-    return 0;
+	printf("\n pid : %d \n time : %s\n",pid,tt);
 }
